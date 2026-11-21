@@ -11,6 +11,14 @@ Kartet er uoffisielt og beregnet, ikke målt. Bruk det til å velge hvor du går
 - «Følg posisjonen min» viser deg selv i kartet mens du går. Posisjonen blir i nettleseren og sendes ingen steder.
 - «Signal» viser styrken på sterkeste node, «Antall noder» hvor mange du når. Node-menyen viser én node om gangen.
 
+## Som app
+
+Siden kan installeres. På iPhone: åpne den i Safari, trykk Del-knappen og velg «Legg til på Hjem-skjerm».
+Da åpner den i fullskjerm med eget ikon.
+
+Appen virker uten nett. Dekningsdataene og et kart over hele området (ca. 5 MB) lagres på telefonen første gang
+du åpner den, og kartfliser du har sett på, blir liggende. Uten nett er kartet litt grovere når du zoomer langt inn.
+
 ## Slik er det laget
 
 - Beregnet 21.11.2026 for en node holdt 1,5 m over bakken med liten innebygd antenne (0 dBi). Senderne er regnet
