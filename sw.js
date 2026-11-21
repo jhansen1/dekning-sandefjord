@@ -1,6 +1,6 @@
-// Dekning Sandefjord: lagrer appen og kartet så den virker uten nett. Bygget 20261121-183443.
-const LAGER = "dekning-20261121-183443", FLISER = "dekning-fliser", MAKS_FLISER = 800;
-const FAST = ["./", "manifest.webmanifest", "ikon-192.png", "apple-touch-icon.png", "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js", "dekning-0.png", "dekning-1.png", "kart14-00.jpg", "kart14-01.jpg", "kart14-10.jpg", "kart14-11.jpg", "kart15-0.jpg", "kart15-1.jpg"];
+// Dekning Sandefjord: lagrer appen og kartet så den virker uten nett. Bygget 20261121-183619.
+const LAGER = "dekning-20261121-183619", FLISER = "dekning-fliser", MAKS_FLISER = 800;
+const FAST = ["./", "manifest.webmanifest", "ikon-192.png", "apple-touch-icon.png", "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js", "dekning-0.png?v=20261121-183619", "dekning-1.png?v=20261121-183619", "kart14-00.jpg", "kart14-01.jpg", "kart14-10.jpg", "kart14-11.jpg", "kart15-0.jpg", "kart15-1.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(LAGER).then(c => c.addAll(FAST)).then(() => self.skipWaiting()));
