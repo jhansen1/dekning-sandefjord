@@ -135,7 +135,7 @@ tr.svak td { color: var(--blekk2); }
       <label class="felt" for="node">Node
         <select id="node"><option value="-1">Alle noder</option></select>
       </label>
-      <label class="felt" for="usikker"><input type="checkbox" id="usikker"> Vis usikker dekning</label>
+      <label class="felt" for="usikker"><input type="checkbox" id="usikker" checked> Vis usikker dekning</label>
       <span class="merknad" id="frakoblet" hidden>Uten nett · lagret kart</span>
     </div>
   </header>
@@ -161,13 +161,16 @@ tr.svak td { color: var(--blekk2); }
       </section>
       <section>
         <h2>Steder å prøve</h2>
+        <p class="liten">Ingen steder i byen gir sikker dekning med den strenge beregningen. Dette er de beste sjansene.</p>
         <div class="steder" id="steder"></div>
       </section>
       <section class="liten">
         <h2>Slik er kartet laget</h2>
-        <p>Beregnet 21.11.2026 for en node holdt 1,5 m over bakken med liten innebygd antenne. Senderne er regnet med 22 dBm og 2 dBi.</p>
-        <p>God dekning betyr minst −115 dBm og sikt eller bare lett skygge fra terrenget. Usikker dekning er signal som må bøye seg over en rygg; det slår ofte ikke til.</p>
-        <p>Trær og hus er bare grovt med (30 m terrengmodell), og nodenes posisjoner er avrundet på map.868.no. Noder som bare er angitt på noen kilometer nær, som Sandø, er regnet fra flere mulige plasser, og dekningen vises der flertallet av dem gir den.</p>
+        <p>Streng beregning fra 21.11.2026 for en node holdt 1,5 m over bakken med 0 dBi antenne. Den forrige utgaven var for raus: Preståsen ga ikke mottak.</p>
+        <p>God dekning betyr minst −105 dBm, som er 6 dB over det svakeste noden kan lese når støygulvet er −104 dBm. Usikker dekning er de siste 6 dB ned til grensen.</p>
+        <p>Alle signaler er trukket ned 12 dB, etter et målt mottak med samme node over 38 km fri sikt. I tillegg kommer tap over opptil tre terrengrygger og gjennom skog og bebyggelse de siste 200 m.</p>
+        <p>Nodenes posisjoner er avrundet på map.868.no. Noder som bare er angitt på noen kilometer nær, som Sandø, må gi dekning fra fire av fem mulige plasser.</p>
+        <p>Nodene sender sjelden. Bli stående 15–20 minutter før du gir opp et sted.</p>
         <p>Bruk kartet til å velge hvor du går, ikke som fasit.</p>
       </section>
       <section class="liten" id="installer" hidden>
@@ -180,18 +183,17 @@ tr.svak td { color: var(--blekk2); }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-const DATA = {"nx": 576, "ny": 576, "nord": 59.232176269218044, "sor": 59.02924933736394, "vest": 10.08544921875, "ost": 10.48095703125, "z": 14, "x1": 8651, "x2": 8668, "y1": 4827, "y2": 4844, "forutsetninger": {"sender_dbm": 22, "sender_dbi": 2, "kabel_db": 1, "mottaker_dbi": 0, "mottaker_m": 1.5, "god_dbm": -115.0, "tap_maks_db": 10.0}, "noder": [{"navn": "R-TEL-FJERDINGEN", "rolle": "ROUTER", "lat": 59.13559, "lon": 9.76808, "km": 29.2, "pakker6t": 7, "bits": 15, "plasser": 1}, {"navn": "R-FAE-SANDØ-WAM7", "rolle": "ROUTER", "lat": 59.08066, "lon": 10.46291, "km": 12.7, "pakker6t": 31, "bits": 13, "plasser": 5}, {"navn": "Råde, Rørfjell", "rolle": "ROUTER", "lat": 59.29779, "lon": 10.83226, "km": 36.4, "pakker6t": 6, "bits": 32, "plasser": 1}, {"navn": "Tux Brudeberget 18dBm", "rolle": "ROUTER", "lat": 59.47009, "lon": 9.90786, "km": 45.0, "pakker6t": 7, "bits": 13, "plasser": 5}, {"navn": "JELOYA-RUTER-NORTH", "rolle": "ROUTER", "lat": 59.42175, "lon": 10.59239, "km": 36.8, "pakker6t": 23, "bits": 32, "plasser": 1}, {"navn": "R-FÆR-Nøtterøy-Venås", "rolle": "ROUTER", "lat": 59.21006, "lon": 10.42634, "km": 12.2, "pakker6t": 4, "bits": 15, "plasser": 1}, {"navn": "Fredrikstad, Bjølstad", "rolle": "CLIENT_BASE", "lat": 59.20812, "lon": 10.91983, "km": 37.7, "pakker6t": 3, "bits": 15, "plasser": 1}, {"navn": "HORTEN-BASE-NORTH", "rolle": "CLIENT_BASE", "lat": 59.4125, "lon": 10.46852, "km": 32.6, "pakker6t": 7, "bits": 15, "plasser": 1}], "lagfiler": ["dekning-0.png", "dekning-1.png", "dekning-2.png"], "basis": [], "start": null, "sentrum": {"navn": "Sandefjord sentrum", "lat": 59.1312, "lon": 10.2167}, "steder": [{"navn": "Preståsen", "lat": 59.13386, "lon": 10.23823}, {"navn": "Breidablikk", "lat": 59.14759, "lon": 10.22655}, {"navn": "Storåsen", "lat": 59.16132, "lon": 10.2396}, {"navn": "Ringkollen", "lat": 59.11589, "lon": 10.25814}], "reserve": [{"fil": "kart14-00.jpg", "nord": 59.232176269218044, "sor": 59.130863097255904, "vest": 10.08544921875, "ost": 10.283203125}, {"fil": "kart14-01.jpg", "nord": 59.232176269218044, "sor": 59.130863097255904, "vest": 10.283203125, "ost": 10.48095703125}, {"fil": "kart14-10.jpg", "nord": 59.130863097255904, "sor": 59.02924933736394, "vest": 10.08544921875, "ost": 10.283203125}, {"fil": "kart14-11.jpg", "nord": 59.130863097255904, "sor": 59.02924933736394, "vest": 10.283203125, "ost": 10.48095703125}, {"fil": "kart15-0.jpg", "nord": 59.17029835064482, "sor": 59.130863097255904, "vest": 10.162353515625, "ost": 10.294189453125}, {"fil": "kart15-1.jpg", "nord": 59.130863097255904, "sor": 59.091382384559104, "vest": 10.162353515625, "ost": 10.294189453125}], "nett": true, "fliser": "https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png"};
-const GOD = DATA.forutsetninger.god_dbm;
+const DATA = {"nx": 576, "ny": 576, "nord": 59.232176269218044, "sor": 59.02924933736394, "vest": 10.08544921875, "ost": 10.48095703125, "z": 14, "x1": 8651, "x2": 8668, "y1": 4827, "y2": 4844, "forutsetninger": {"sender_dbm": 22, "sender_dbi": 2, "kabel_db": 1, "mottaker_dbi": 0, "mottaker_m": 1.5, "kalibrering_db": 12.0, "stoy_dbm": -104.0, "lesbar_dbm": -111.5, "god_dbm": -105.5, "skog_db_m": 0.15, "skog_maks_db": 20.0, "hus_db_m": 0.1, "hus_maks_db": 12.0}, "noder": [{"navn": "R-FÆR-Nøtterøy-Venås", "rolle": "ROUTER", "lat": 59.21006, "lon": 10.42634, "km": 12.2, "pakker6t": 4, "bits": 15, "plasser": 1}, {"navn": "R-FAE-SANDØ-WAM7", "rolle": "ROUTER", "lat": 59.08066, "lon": 10.46291, "km": 12.7, "pakker6t": 31, "bits": 13, "plasser": 5}], "lagfiler": ["dekning-0.png"], "basis": [], "start": null, "sentrum": {"navn": "Sandefjord sentrum", "lat": 59.1312, "lon": 10.2167}, "steder": [{"navn": "Hubroåsen", "lat": 59.12223, "lon": 10.25265}, {"navn": "Midtås", "lat": 59.14337, "lon": 10.21763}, {"navn": "Ringkollen", "lat": 59.11589, "lon": 10.25883}, {"navn": "Hjertås", "lat": 59.16379, "lon": 10.22793}], "reserve": [{"fil": "kart14-00.jpg", "nord": 59.232176269218044, "sor": 59.130863097255904, "vest": 10.08544921875, "ost": 10.283203125}, {"fil": "kart14-01.jpg", "nord": 59.232176269218044, "sor": 59.130863097255904, "vest": 10.283203125, "ost": 10.48095703125}, {"fil": "kart14-10.jpg", "nord": 59.130863097255904, "sor": 59.02924933736394, "vest": 10.08544921875, "ost": 10.283203125}, {"fil": "kart14-11.jpg", "nord": 59.130863097255904, "sor": 59.02924933736394, "vest": 10.283203125, "ost": 10.48095703125}, {"fil": "kart15-0.jpg", "nord": 59.17029835064482, "sor": 59.130863097255904, "vest": 10.162353515625, "ost": 10.294189453125}, {"fil": "kart15-1.jpg", "nord": 59.130863097255904, "sor": 59.091382384559104, "vest": 10.162353515625, "ost": 10.294189453125}], "nett": true, "fliser": "https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png"};
 const nx = DATA.nx, ny = DATA.ny, PER = nx / (DATA.x2 - DATA.x1 + 1);
 const N2 = Math.pow(2, DATA.z);
 const tall = (v, d = 0) => v.toLocaleString("nb-NO", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−");
-const SIKT = ["bak terreng, usikker", "lett skygge", "streifer terrenget", "fri sikt"];
+const SIKT = ["på grensen, usikker", "bak terreng", "streifer terrenget", "fri sikt"];
 const RETN = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
 
 let lag = [];            // én Uint8Array per node
 let visning = "signal";  // signal | antall
 let valgt = -1;          // nodeindeks, -1 = alle
-let visUsikker = false;
+let visUsikker = true;
 let godAntall = null;    // antall noder med god dekning per rute
 let meg = null;          // {lat, lon} når brukeren har markert seg selv
 let megMerke = null;
@@ -240,7 +242,7 @@ function farge(navn) {
   const h = getComputedStyle(document.documentElement).getPropertyValue(navn).trim().replace("#", "");
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
-const trinnSignal = rx => rx < -105 ? 0 : rx < -95 ? 1 : rx < -85 ? 2 : 3;
+const trinnSignal = rx => rx < -100 ? 0 : rx < -95 ? 1 : rx < -85 ? 2 : 3;
 const trinnAntall = n => n >= 5 ? 3 : n >= 3 ? 2 : n - 1;
 
 function tegn() {
@@ -255,7 +257,6 @@ function tegn() {
       const b = aktuelle[k][p];
       if (!b) continue;
       const rx = (b & 63) - 128;
-      if (rx < GOD) continue;
       if (b >> 6) { antall++; if (rx > best) best = rx; } else usikker = true;
     }
     if (antall) {
@@ -273,8 +274,8 @@ function tegn() {
 function tegnForklaring() {
   const rader = visning === "antall"
     ? [["--s4", "5 eller flere"], ["--s3", "3–4"], ["--s2", "2"], ["--s1", "1"]]
-    : [["--s4", "−85 eller sterkere"], ["--s3", "−95 til −85"], ["--s2", "−105 til −95"], ["--s1", "−115 til −105"]];
-  if (visUsikker) rader.push(["--usikker", "Bak terreng, usikker"]);
+    : [["--s4", "−85 eller sterkere"], ["--s3", "−95 til −85"], ["--s2", "−100 til −95"], ["--s1", "−105 til −100"]];
+  if (visUsikker) rader.push(["--usikker", "På grensen, usikker"]);
   const tittel = visning === "antall" ? "Noder med god dekning" : (valgt >= 0 ? "Signal fra valgt node, dBm" : "Sterkeste node, dBm");
   document.getElementById("forklaring").innerHTML = `<h2>${tittel}</h2><ul>` +
     rader.map(r => `<li><span class="rute" style="background:var(${r[0]})"></span>${r[1]}</li>`).join("") + "</ul>";
@@ -326,16 +327,16 @@ function noderI(p) {
   lag.forEach((l, k) => { const b = l[p]; if (b) ut.push({ k, rx: (b & 63) - 128, sikt: b >> 6 }); });
   return ut.sort((a, b) => b.rx - a.rx);
 }
-const gode = liste => liste.filter(n => n.sikt >= 1 && n.rx >= GOD);
+const gode = liste => liste.filter(n => n.sikt >= 1);
 
 function les(lat, lon, navn) {
   sikte.setLatLng([lat, lon]);
-  const alle = noderI(rute(lat, lon)), g = gode(alle), u = alle.filter(n => n.sikt === 0 && n.rx >= GOD);
+  const alle = noderI(rute(lat, lon)), g = gode(alle), u = alle.filter(n => n.sikt === 0);
   let h = `<h2>${navn || "Valgt punkt"}</h2><div class="hvor">${[tall(lat, 5) + ", " + tall(lon, 5), fraStart(lat, lon)].filter(Boolean).join(" · ")}</div>`;
   h += `<div class="dom">${g.length ? (g.length === 1 ? "Én node med god dekning" : g.length + " noder med god dekning") : "Ingen noder med god dekning her"}</div>`;
   const rad = (n, kl) => `<tr class="${kl}"><td>${DATA.noder[n.k].navn}<span class="sikt">${SIKT[n.sikt]} · ${tall(DATA.noder[n.k].km_fra(lat, lon), 1)} km unna${DATA.noder[n.k].bits <= 14 ? " · plassen er grovt angitt" : ""}</span></td><td class="tall">${tall(n.rx)} dBm</td></tr>`;
   if (g.length || u.length) h += "<table>" + g.map(n => rad(n, "")).join("") + u.slice(0, 4).map(n => rad(n, "svak")).join("") + "</table>";
-  if (!g.length && !u.length) h += "<p>Terrenget stenger for alle nodene. Prøv et høyere eller mer åpent sted.</p>";
+  if (!g.length && !u.length) h += "<p>Ingen noder er sterke nok her. Prøv et åpent sted med fri sikt mot en node.</p>";
   siste = { lat, lon, naer: null };
   if (!g.length) {
     const n = naermesteGode(lat, lon);
@@ -476,7 +477,7 @@ function lastLag(fil) {
 Promise.all(DATA.lagfiler.map(lastLag)).then(deler => {
   lag = deler.flat().slice(0, DATA.noder.length);
   godAntall = new Uint8Array(nx * ny);
-  lag.forEach(l => { for (let p = 0; p < nx * ny; p++) { const b = l[p]; if (b >> 6 && (b & 63) - 128 >= GOD) godAntall[p]++; } });
+  lag.forEach(l => { for (let p = 0; p < nx * ny; p++) { const b = l[p]; if (b >> 6) godAntall[p]++; } });
   tegn();
   try { const m = JSON.parse(localStorage.getItem("dekning-meg") || "null"); if (m && grenser.contains([m.lat, m.lon])) settMeg(m.lat, m.lon, false); } catch (e) {}
   tegnSteder();
@@ -488,10 +489,11 @@ Promise.all(DATA.lagfiler.map(lastLag)).then(deler => {
 function tegnSteder() {
   document.getElementById("steder").innerHTML = "";
   DATA.steder.forEach(s => {
-    const g = gode(noderI(rute(s.lat, s.lon)));
+    const alle = noderI(rute(s.lat, s.lon)), g = gode(alle);
+    const status = g.length ? `${g.length} ${g.length === 1 ? "node" : "noder"}<br>${tall(g[0].rx)} dBm` : alle.length ? `På grensen<br>${tall(alle[0].rx)} dBm` : "Ingen";
     const k = document.createElement("button");
     k.type = "button"; k.className = "sted";
-    k.innerHTML = `<div><b>${s.navn}</b><br><span>${fraStart(s.lat, s.lon)}</span></div><span>${g.length} ${g.length === 1 ? "node" : "noder"}${g.length ? "<br>" + tall(g[0].rx) + " dBm" : ""}</span>`;
+    k.innerHTML = `<div><b>${s.navn}</b><br><span>${fraStart(s.lat, s.lon)}</span></div><span>${status}</span>`;
     k.addEventListener("click", () => { kart.flyTo([s.lat, s.lon], 15, { duration: 0.6 }); les(s.lat, s.lon, s.navn); });
     document.getElementById("steder").appendChild(k);
   });
