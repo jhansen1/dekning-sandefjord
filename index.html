@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Hvor en håndholdt Meshtastic-node bør høre nodene rundt Sandefjord. Uoffisielt, beregnet fra terreng.">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Dekning Sandefjord</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Oppsett: én skjerm. Kontroller øverst, kartet fyller resten, avlesning i sidepanel (under kartet på mobil). */
+:root {
+  --bg: #f1f4f8; --flate: #ffffff; --blekk: #15202d; --blekk2: #4c5b6d; --linje: #d3dae3; --aksent: #1c5cab;
+  --s1: #86b6ef; --s2: #3987e5; --s3: #1c5cab; --s4: #0d366b; --usikker: #8f8a9c;
+  --kartgrunn: #e7eaee; --kartfilter: none;
+  --skrift: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tittel: "Space Grotesk", "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141a; --flate: #19212b; --blekk: #e7ecf2; --blekk2: #a2aebc; --linje: #2b3644; --aksent: #6da7ec;
+    --s1: #184f95; --s2: #2a78d6; --s3: #6da7ec; --s4: #cde2fb; --usikker: #7d7889;
+    --kartgrunn: #1b222b; --kartfilter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f141a; --flate: #19212b; --blekk: #e7ecf2; --blekk2: #a2aebc; --linje: #2b3644; --aksent: #6da7ec;
+  --s1: #184f95; --s2: #2a78d6; --s3: #6da7ec; --s4: #cde2fb; --usikker: #7d7889;
+  --kartgrunn: #1b222b; --kartfilter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--blekk); font-family: var(--skrift); font-size: 14px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px; box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: border-box; }
+.app { height: 100%; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.topp { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 20px; }
+.topp h1 { font-family: var(--tittel); font-size: 20px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.topp p { margin: 0; color: var(--blekk2); font-size: 13px; }
+.navn { display: flex; flex-direction: column; gap: 1px; min-width: 0; margin-right: auto; }
+.kontroller { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.segment { display: inline-flex; border: 1px solid var(--linje); border-radius: 8px; overflow: hidden; background: var(--flate); }
+.segment button { font: inherit; font-weight: 500; color: var(--blekk2); background: none; border: 0; padding: 7px 12px; cursor: pointer; }
+.segment button[aria-pressed="true"] { background: var(--aksent); color: var(--flate); }
+.segment button:disabled { opacity: 0.45; cursor: default; }
+.felt { display: inline-flex; align-items: center; gap: 6px; color: var(--blekk2); font-size: 13px; }
+select { font: inherit; color: var(--blekk); background: var(--flate); border: 1px solid var(--linje); border-radius: 8px; padding: 6px 8px; max-width: 250px; }
+input[type="checkbox"] { accent-color: var(--aksent); width: 16px; height: 16px; margin: 0; }
+button:focus-visible, select:focus-visible, input:focus-visible, .sted:focus-visible { outline: 2px solid var(--aksent); outline-offset: 2px; }
+
+.arbeid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 10px; }
+.kartramme { position: relative; min-height: 0; border: 1px solid var(--linje); border-radius: 10px; overflow: hidden; background: var(--kartgrunn); }
+#kart { position: absolute; inset: 0; background: var(--kartgrunn); font-family: var(--skrift); }
+.leaflet-basis-pane { filter: var(--kartfilter); }
+.leaflet-container img.leaflet-image-layer { max-width: none !important; max-height: none !important; }
+.leaflet-container .leaflet-control-attribution { background: var(--flate); color: var(--blekk2); font-size: 10.5px; opacity: 0.92; }
+.leaflet-bar a, .leaflet-bar a:hover { background: var(--flate); color: var(--blekk); border-bottom-color: var(--linje); }
+.leaflet-touch .leaflet-bar { border-color: var(--linje); }
+
+.forklaring { position: absolute; left: 10px; bottom: 10px; z-index: 500; background: var(--flate); border: 1px solid var(--linje); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: 210px; }
+.forklaring h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blekk2); margin: 0 0 6px; }
+.forklaring ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.forklaring li { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.rute { width: 16px; height: 12px; border-radius: 3px; flex: none; opacity: 0.85; }
+
+.panel { min-height: 0; overflow: auto; background: var(--flate); border: 1px solid var(--linje); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+.panel h2 { font-family: var(--tittel); font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+.panel p { margin: 0; color: var(--blekk2); }
+.punkt .hvor { font-variant-numeric: tabular-nums; color: var(--blekk2); font-size: 12.5px; }
+.dom { font-weight: 600; margin: 6px 0 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+td { padding: 4px 0; border-top: 1px solid var(--linje); vertical-align: top; }
+td.tall { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 8px; }
+td .sikt { display: block; color: var(--blekk2); font-size: 12px; }
+tr.svak td { color: var(--blekk2); }
+.steder { display: grid; gap: 6px; }
+.sted { font: inherit; text-align: left; color: var(--blekk); background: var(--bg); border: 1px solid var(--linje); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
+.sted b { font-weight: 600; }
+.sted span { color: var(--blekk2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.posrad { display: flex; gap: 6px; margin-bottom: 6px; }
+.posrad input { flex: 1; min-width: 0; font: inherit; color: var(--blekk); background: var(--bg); border: 1px solid var(--linje); border-radius: 8px; padding: 7px 9px; }
+.knapp { font: inherit; font-weight: 500; color: var(--flate); background: var(--aksent); border: 0; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.knapp.stille { color: var(--blekk); background: var(--bg); border: 1px solid var(--linje); }
+.valg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.naer { margin-top: 8px; color: var(--blekk); }
+.valg.gps { margin: 0 0 8px; }
+.liten { font-size: 12.5px; }
+.liten p + p { margin-top: 6px; }
+
+.merke { display: flex; align-items: center; gap: 5px; white-space: nowrap; transform: translate(-7px, -7px); }
+.merke i { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--blekk); background: var(--flate); flex: none; }
+.merke.start i { border-color: var(--aksent); background: var(--aksent); box-shadow: 0 0 0 3px var(--flate); }
+.merke.meg i { border-color: var(--flate); background: var(--blekk); box-shadow: 0 0 0 3px var(--blekk); }
+.merke.node i { border-radius: 2px; transform: rotate(45deg); background: var(--blekk); }
+.merke b { font-size: 11.5px; font-weight: 600; color: var(--blekk); background: var(--flate); border: 1px solid var(--linje); border-radius: 5px; padding: 1px 5px; }
+.gpsring { color: var(--blekk); }
+.sikte { width: 18px; height: 18px; border: 2px solid var(--blekk); border-radius: 50%; box-shadow: 0 0 0 2px var(--flate); transform: translate(-9px, -9px); }
+
+@media (max-width: 760px) {
+  .arbeid { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); }
+  .topp h1 { font-size: 18px; }
+  select { max-width: 190px; }
+}
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-control-layers-toggle{background-image:none;width:36px;height:36px}.leaflet-retina .leaflet-control-layers-toggle{background-image:none;background-size:26px 26px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-default-icon-path{background-image:none}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+
+<style>@supports (height:100dvh){html,body{height:100dvh}}</style>
+</head>
+<body>
+<div class="app">
+  <header class="topp">
+    <div class="navn">
+      <h1>Dekning Sandefjord</h1>
+      <p>Hvor en håndholdt Meshtastic-node bør høre nodene rundt byen</p>
+    </div>
+    <div class="kontroller">
+      <div class="segment" role="group" aria-label="Visning">
+        <button type="button" id="vis-signal" aria-pressed="true">Signal</button>
+        <button type="button" id="vis-antall" aria-pressed="false">Antall noder</button>
+      </div>
+      <label class="felt" for="node">Node
+        <select id="node"><option value="-1">Alle noder</option></select>
+      </label>
+      <label class="felt" for="usikker"><input type="checkbox" id="usikker"> Vis usikker dekning</label>
+    </div>
+  </header>
+
+  <div class="arbeid">
+    <div class="kartramme">
+      <div id="kart" role="application" aria-label="Dekningskart over Sandefjord"></div>
+      <div class="forklaring" id="forklaring" aria-live="polite"></div>
+    </div>
+    <aside class="panel">
+      <section class="punkt" id="punkt" aria-live="polite">
+        <h2>Valgt punkt</h2>
+        <p>Laster dekningsdata …</p>
+      </section>
+      <section>
+        <h2>Min posisjon</h2>
+        <form class="posrad" id="pos-skjema">
+          <input type="text" id="pos" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Lim inn koordinater" aria-label="Koordinater for min posisjon">
+          <button type="submit" class="knapp">Vis</button>
+        </form>
+        <div class="valg gps" id="gps-rad" hidden><button type="button" class="knapp" id="gps" aria-pressed="false">Følg posisjonen min</button></div>
+        <p class="liten" id="pos-hjelp">Siden kan ikke lese GPS. Kopier koordinatene dine fra Kart-appen og lim dem inn, eller trykk der du står i kartet og velg «Marker som min posisjon».</p>
+      </section>
+      <section>
+        <h2>Steder å prøve</h2>
+        <div class="steder" id="steder"></div>
+      </section>
+      <section class="liten">
+        <h2>Slik er kartet laget</h2>
+        <p>Beregnet 21.11.2026 for en node holdt 1,5 m over bakken med liten innebygd antenne. Senderne er regnet med 22 dBm og 2 dBi.</p>
+        <p>God dekning betyr minst −115 dBm og sikt eller bare lett skygge fra terrenget. Usikker dekning er signal som må bøye seg over en rygg; det slår ofte ikke til.</p>
+        <p>Trær og hus er bare grovt med (30 m terrengmodell), og nodenes posisjoner er avrundet på map.868.no. Noder som bare er angitt på noen kilometer nær, som Sandø, er regnet fra flere mulige plasser, og dekningen vises der flertallet av dem gir den.</p>
+        <p>Bruk kartet til å velge hvor du går, ikke som fasit.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DATA = {"nx": 576, "ny": 576, "nord": 59.232176269218044, "sor": 59.02924933736394, "vest": 10.08544921875, "ost": 10.48095703125, "z": 14, "x1": 8651, "x2": 8668, "y1": 4827, "y2": 4844, "forutsetninger": {"sender_dbm": 22, "sender_dbi": 2, "kabel_db": 1, "mottaker_dbi": 0, "mottaker_m": 1.5, "god_dbm": -115.0, "tap_maks_db": 10.0}, "noder": [{"navn": "R-TEL-FJERDINGEN", "rolle": "ROUTER", "lat": 59.13559, "lon": 9.76808, "km": 29.2, "pakker6t": 7, "bits": 15, "plasser": 1}, {"navn": "R-FAE-SANDØ-WAM7", "rolle": "ROUTER", "lat": 59.08066, "lon": 10.46291, "km": 12.7, "pakker6t": 31, "bits": 13, "plasser": 5}, {"navn": "Råde, Rørfjell", "rolle": "ROUTER", "lat": 59.29779, "lon": 10.83226, "km": 36.4, "pakker6t": 6, "bits": 32, "plasser": 1}, {"navn": "Tux Brudeberget 18dBm", "rolle": "ROUTER", "lat": 59.47009, "lon": 9.90786, "km": 45.0, "pakker6t": 7, "bits": 13, "plasser": 5}, {"navn": "JELOYA-RUTER-NORTH", "rolle": "ROUTER", "lat": 59.42175, "lon": 10.59239, "km": 36.8, "pakker6t": 23, "bits": 32, "plasser": 1}, {"navn": "R-FÆR-Nøtterøy-Venås", "rolle": "ROUTER", "lat": 59.21006, "lon": 10.42634, "km": 12.2, "pakker6t": 4, "bits": 15, "plasser": 1}, {"navn": "Fredrikstad, Bjølstad", "rolle": "CLIENT_BASE", "lat": 59.20812, "lon": 10.91983, "km": 37.7, "pakker6t": 3, "bits": 15, "plasser": 1}, {"navn": "HORTEN-BASE-NORTH", "rolle": "CLIENT_BASE", "lat": 59.4125, "lon": 10.46852, "km": 32.6, "pakker6t": 7, "bits": 15, "plasser": 1}], "lagfiler": ["dekning-0.png", "dekning-1.png", "dekning-2.png"], "basis": [], "start": null, "sentrum": {"navn": "Sandefjord sentrum", "lat": 59.1312, "lon": 10.2167}, "steder": [{"navn": "Preståsen", "lat": 59.13386, "lon": 10.23823}, {"navn": "Breidablikk", "lat": 59.14759, "lon": 10.22655}, {"navn": "Storåsen", "lat": 59.16132, "lon": 10.2396}, {"navn": "Ringkollen", "lat": 59.11589, "lon": 10.25814}], "nett": true, "fliser": "https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png"};
+const GOD = DATA.forutsetninger.god_dbm;
+const nx = DATA.nx, ny = DATA.ny, PER = nx / (DATA.x2 - DATA.x1 + 1);
+const N2 = Math.pow(2, DATA.z);
+const tall = (v, d = 0) => v.toLocaleString("nb-NO", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−");
+const SIKT = ["bak terreng, usikker", "lett skygge", "streifer terrenget", "fri sikt"];
+const RETN = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
+
+let lag = [];            // én Uint8Array per node
+let visning = "signal";  // signal | antall
+let valgt = -1;          // nodeindeks, -1 = alle
+let visUsikker = false;
+let godAntall = null;    // antall noder med god dekning per rute
+let meg = null;          // {lat, lon} når brukeren har markert seg selv
+let megMerke = null;
+let siste = null;        // sist avleste punkt
+const UT = DATA.start || DATA.sentrum;  // der kartet åpner
+
+const kart = L.map("kart", { zoomSnap: 0.5, minZoom: 10.5, maxZoom: DATA.fliser ? 18 : 17, zoomControl: true });
+const grenser = L.latLngBounds([DATA.sor, DATA.vest], [DATA.nord, DATA.ost]);
+kart.setMaxBounds(grenser.pad(0.1));
+kart.createPane("basis").style.zIndex = 200;
+kart.createPane("dekning").style.zIndex = 300;
+if (DATA.fliser) L.tileLayer(DATA.fliser, { pane: "basis", maxZoom: 18, bounds: grenser.pad(0.1) }).addTo(kart);
+else DATA.basis.forEach(b => L.imageOverlay(b.fil, [[b.sor, b.vest], [b.nord, b.ost]], { pane: "basis", interactive: false }).addTo(kart));
+kart.attributionControl.setPrefix(false).addAttribution("Kart © Kartverket · Noder fra map.868.no · Terreng Copernicus GLO-30");
+kart.setView([UT.lat, UT.lon], window.innerWidth < 760 ? 13 : 13.5);
+
+const dekningsbilde = L.imageOverlay("data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+  grenser, { pane: "dekning", opacity: 0.62, interactive: false }).addTo(kart);
+
+function ikon(klasse, tekst) {
+  return L.divIcon({ className: "", iconSize: [0, 0], html: `<div class="merke ${klasse}"><i></i>${tekst ? `<b>${tekst}</b>` : ""}</div>` });
+}
+if (DATA.start) L.marker([DATA.start.lat, DATA.start.lon], { icon: ikon("start", DATA.start.navn), keyboard: false }).addTo(kart)
+  .on("click", () => les(DATA.start.lat, DATA.start.lon, DATA.start.navn));
+DATA.steder.forEach(s => L.marker([s.lat, s.lon], { icon: ikon("plass", s.navn), keyboard: false }).addTo(kart)
+  .on("click", () => les(s.lat, s.lon, s.navn)));
+DATA.noder.forEach((n, i) => {
+  if (!grenser.contains([n.lat, n.lon]) || n.bits <= 14) return;  // grovt angitte noder får ikke nål
+  L.marker([n.lat, n.lon], { icon: ikon("node", n.navn), keyboard: false }).addTo(kart)
+    .on("click", () => { document.getElementById("node").value = String(i); velgNode(i); });
+});
+const sikte = L.marker([UT.lat, UT.lon], { icon: L.divIcon({ className: "", iconSize: [0, 0], html: '<div class="sikte"></div>' }), interactive: false, keyboard: false }).addTo(kart);
+
+function farge(navn) {
+  const h = getComputedStyle(document.documentElement).getPropertyValue(navn).trim().replace("#", "");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+const trinnSignal = rx => rx < -105 ? 0 : rx < -95 ? 1 : rx < -85 ? 2 : 3;
+const trinnAntall = n => n >= 5 ? 3 : n >= 3 ? 2 : n - 1;
+
+function tegn() {
+  if (!lag.length) return;
+  const c = document.createElement("canvas"); c.width = nx; c.height = ny;
+  const ctx = c.getContext("2d"), bilde = ctx.createImageData(nx, ny), d = bilde.data;
+  const rampe = [farge("--s1"), farge("--s2"), farge("--s3"), farge("--s4")], grå = farge("--usikker");
+  const aktuelle = valgt >= 0 ? [lag[valgt]] : lag;
+  for (let p = 0, o = 0; p < nx * ny; p++, o += 4) {
+    let best = -999, antall = 0, usikker = false;
+    for (let k = 0; k < aktuelle.length; k++) {
+      const b = aktuelle[k][p];
+      if (!b) continue;
+      const rx = (b & 63) - 128;
+      if (rx < GOD) continue;
+      if (b >> 6) { antall++; if (rx > best) best = rx; } else usikker = true;
+    }
+    if (antall) {
+      const f = rampe[visning === "antall" ? trinnAntall(antall) : trinnSignal(best)];
+      d[o] = f[0]; d[o + 1] = f[1]; d[o + 2] = f[2]; d[o + 3] = 255;
+    } else if (usikker && visUsikker) {
+      d[o] = grå[0]; d[o + 1] = grå[1]; d[o + 2] = grå[2]; d[o + 3] = 150;
+    }
+  }
+  ctx.putImageData(bilde, 0, 0);
+  dekningsbilde.setUrl(c.toDataURL("image/png"));
+  tegnForklaring();
+}
+
+function tegnForklaring() {
+  const rader = visning === "antall"
+    ? [["--s4", "5 eller flere"], ["--s3", "3–4"], ["--s2", "2"], ["--s1", "1"]]
+    : [["--s4", "−85 eller sterkere"], ["--s3", "−95 til −85"], ["--s2", "−105 til −95"], ["--s1", "−115 til −105"]];
+  if (visUsikker) rader.push(["--usikker", "Bak terreng, usikker"]);
+  const tittel = visning === "antall" ? "Noder med god dekning" : (valgt >= 0 ? "Signal fra valgt node, dBm" : "Sterkeste node, dBm");
+  document.getElementById("forklaring").innerHTML = `<h2>${tittel}</h2><ul>` +
+    rader.map(r => `<li><span class="rute" style="background:var(${r[0]})"></span>${r[1]}</li>`).join("") + "</ul>";
+}
+
+function rute(lat, lon) {
+  const fx = (lon + 180) / 360 * N2, fy = (1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * N2;
+  const i = Math.floor((fx - DATA.x1) * PER), j = Math.floor((fy - DATA.y1) * PER);
+  return (i < 0 || j < 0 || i >= nx || j >= ny) ? -1 : j * nx + i;
+}
+function avstand(a, b, c, e) {
+  const r = Math.PI / 180, h = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((e - b) * r / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}
+function retning(a, b, c, e) {
+  const r = Math.PI / 180, y = Math.sin((e - b) * r) * Math.cos(c * r);
+  const x = Math.cos(a * r) * Math.sin(c * r) - Math.sin(a * r) * Math.cos(c * r) * Math.cos((e - b) * r);
+  return (Math.atan2(y, x) / r + 360) % 360;
+}
+const lengde = m => m >= 1000 ? tall(m / 1000, 1) + " km" : tall(Math.round(m / 10) * 10) + " m";
+const himmel = (a, b, c, e) => RETN[Math.round(retning(a, b, c, e) / 45) % 8];
+function fraStart(lat, lon) {
+  const r = meg || DATA.start, hvem = meg ? "deg" : "utgangspunktet";
+  if (!r) return "";
+  const m = avstand(r.lat, r.lon, lat, lon);
+  if (m < 25) return meg ? "der du står" : "ved utgangspunktet";
+  return `${lengde(m)} ${himmel(r.lat, r.lon, lat, lon)} for ${hvem}`;
+}
+function ruteTilLl(i, j) {
+  const fx = DATA.x1 + (i + 0.5) / PER, fy = DATA.y1 + (j + 0.5) / PER;
+  return { lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * fy / N2))) * 180 / Math.PI, lon: fx / N2 * 360 - 180 };
+}
+function naermesteGode(lat, lon) {
+  const p = rute(lat, lon);
+  if (p < 0 || !godAntall) return null;
+  const i0 = p % nx, j0 = Math.floor(p / nx), R = 130;
+  let best = null, bd = Infinity;
+  for (let j = Math.max(0, j0 - R); j <= Math.min(ny - 1, j0 + R); j++)
+    for (let i = Math.max(0, i0 - R); i <= Math.min(nx - 1, i0 + R); i++) {
+      if (!godAntall[j * nx + i]) continue;
+      const d = (i - i0) * (i - i0) + (j - j0) * (j - j0);
+      if (d < bd) { bd = d; best = [i, j]; }
+    }
+  return best ? ruteTilLl(best[0], best[1]) : null;
+}
+function noderI(p) {
+  const ut = [];
+  if (p < 0) return ut;
+  lag.forEach((l, k) => { const b = l[p]; if (b) ut.push({ k, rx: (b & 63) - 128, sikt: b >> 6 }); });
+  return ut.sort((a, b) => b.rx - a.rx);
+}
+const gode = liste => liste.filter(n => n.sikt >= 1 && n.rx >= GOD);
+
+function les(lat, lon, navn) {
+  sikte.setLatLng([lat, lon]);
+  const alle = noderI(rute(lat, lon)), g = gode(alle), u = alle.filter(n => n.sikt === 0 && n.rx >= GOD);
+  let h = `<h2>${navn || "Valgt punkt"}</h2><div class="hvor">${[tall(lat, 5) + ", " + tall(lon, 5), fraStart(lat, lon)].filter(Boolean).join(" · ")}</div>`;
+  h += `<div class="dom">${g.length ? (g.length === 1 ? "Én node med god dekning" : g.length + " noder med god dekning") : "Ingen noder med god dekning her"}</div>`;
+  const rad = (n, kl) => `<tr class="${kl}"><td>${DATA.noder[n.k].navn}<span class="sikt">${SIKT[n.sikt]} · ${tall(DATA.noder[n.k].km_fra(lat, lon), 1)} km unna${DATA.noder[n.k].bits <= 14 ? " · plassen er grovt angitt" : ""}</span></td><td class="tall">${tall(n.rx)} dBm</td></tr>`;
+  if (g.length || u.length) h += "<table>" + g.map(n => rad(n, "")).join("") + u.slice(0, 4).map(n => rad(n, "svak")).join("") + "</table>";
+  if (!g.length && !u.length) h += "<p>Terrenget stenger for alle nodene. Prøv et høyere eller mer åpent sted.</p>";
+  siste = { lat, lon, naer: null };
+  if (!g.length) {
+    const n = naermesteGode(lat, lon);
+    if (n) {
+      siste.naer = n;
+      h += `<p class="naer">Nærmeste gode dekning er ${lengde(avstand(lat, lon, n.lat, n.lon))} mot ${himmel(lat, lon, n.lat, n.lon)}.</p>`;
+    }
+  }
+  h += '<div class="valg">' + (siste.naer ? '<button type="button" class="knapp" data-gjor="naer">Vis nærmeste</button>' : "") +
+    '<button type="button" class="knapp stille" data-gjor="meg">Marker som min posisjon</button></div>';
+  document.getElementById("punkt").innerHTML = h;
+}
+
+function settMeg(lat, lon, husk) {
+  meg = { lat, lon };
+  if (megMerke) megMerke.setLatLng([lat, lon]);
+  else megMerke = L.marker([lat, lon], { icon: ikon("meg", "Deg"), keyboard: false, zIndexOffset: 500 }).addTo(kart)
+    .on("click", () => les(meg.lat, meg.lon, "Din posisjon"));
+  if (husk) { try { localStorage.setItem("dekning-meg", JSON.stringify(meg)); } catch (e) {} }
+  if (lag.length) tegnSteder();
+}
+function tolkPosisjon(t) {
+  const gms = [...t.matchAll(/(\d{1,3})\s*°\s*(\d{1,2})\s*[′']\s*(\d{1,2}(?:[.,]\d+)?)\s*[″"]?\s*([NSØEVW])?/gi)];
+  if (gms.length >= 2) {
+    const v = d => (+d[1] + d[2] / 60 + parseFloat(d[3].replace(",", ".")) / 3600) * (d[4] && /[SVW]/i.test(d[4]) ? -1 : 1);
+    return [v(gms[0]), v(gms[1])];
+  }
+  const des = [...t.matchAll(/(-?\d{1,3})[.,](\d{3,})/g)];
+  return des.length >= 2 ? [parseFloat(des[0][1] + "." + des[0][2]), parseFloat(des[1][1] + "." + des[1][2])] : null;
+}
+document.getElementById("pos-skjema").addEventListener("submit", e => {
+  e.preventDefault();
+  const hjelp = document.getElementById("pos-hjelp"), p = tolkPosisjon(document.getElementById("pos").value);
+  if (!p) { hjelp.textContent = "Fant ingen koordinater i teksten. Eksempel: 59,13120, 10,21670"; return; }
+  if (!grenser.contains(p)) { hjelp.textContent = "Punktet ligger utenfor kartet, som dekker Sandefjord med omegn."; return; }
+  hjelp.textContent = "Posisjonen er markert. Lim inn på nytt når du har flyttet deg.";
+  settMeg(p[0], p[1], true);
+  kart.flyTo(p, Math.max(kart.getZoom(), 15), { duration: 0.6 });
+  les(p[0], p[1], "Din posisjon");
+});
+document.getElementById("punkt").addEventListener("click", e => {
+  const gjor = e.target.dataset ? e.target.dataset.gjor : null;
+  if (!gjor || !siste) return;
+  if (gjor === "meg") { settMeg(siste.lat, siste.lon, true); les(siste.lat, siste.lon, "Din posisjon"); }
+  if (gjor === "naer" && siste.naer) { const n = siste.naer; kart.flyTo([n.lat, n.lon], Math.max(kart.getZoom(), 15), { duration: 0.6 }); les(n.lat, n.lon, "Nærmeste gode dekning"); }
+});
+
+// GPS: bare på en vanlig nettside. Artifact-sider får ikke lese posisjon.
+let gpsId = null, gpsRing = null, gpsLest = null;
+function gpsStopp(tekst) {
+  if (gpsId !== null) navigator.geolocation.clearWatch(gpsId);
+  gpsId = null;
+  const k = document.getElementById("gps");
+  k.textContent = "Følg posisjonen min"; k.setAttribute("aria-pressed", "false");
+  if (tekst) document.getElementById("pos-hjelp").textContent = tekst;
+}
+function gpsNy(p) {
+  const lat = p.coords.latitude, lon = p.coords.longitude, hjelp = document.getElementById("pos-hjelp");
+  if (!grenser.contains([lat, lon])) { hjelp.textContent = "Du er utenfor kartet, som dekker Sandefjord med omegn."; return; }
+  const forste = gpsLest === null;
+  settMeg(lat, lon, false);
+  if (gpsRing) gpsRing.setLatLng([lat, lon]).setRadius(p.coords.accuracy);
+  else gpsRing = L.circle([lat, lon], { radius: p.coords.accuracy, interactive: false, weight: 1, color: "currentColor", fillOpacity: 0.08, className: "gpsring" }).addTo(kart);
+  hjelp.textContent = `Følger posisjonen din, nøyaktighet ca. ${tall(Math.round(p.coords.accuracy))} m.`;
+  if (forste) kart.flyTo([lat, lon], Math.max(kart.getZoom(), 15), { duration: 0.6 });
+  if (forste || avstand(gpsLest.lat, gpsLest.lon, lat, lon) > 15) { gpsLest = { lat, lon }; les(lat, lon, "Din posisjon"); }
+}
+function gpsFeil(e) {
+  gpsStopp(e.code === 1
+    ? "Posisjon er ikke tillatt for denne siden. Slå det på i nettleserens innstillinger, eller lim inn koordinater."
+    : "Fikk ikke posisjon akkurat nå. Prøv igjen ute, eller lim inn koordinater.");
+}
+if (DATA.nett && navigator.geolocation) {
+  document.getElementById("gps-rad").hidden = false;
+  document.getElementById("pos-hjelp").textContent = "Trykk «Følg posisjonen min» for å se deg selv i kartet mens du går. Posisjonen blir i nettleseren din og sendes ingen steder.";
+  document.getElementById("gps").addEventListener("click", () => {
+    if (gpsId !== null) { gpsStopp("Følging er stoppet."); return; }
+    gpsLest = null;
+    const k = document.getElementById("gps");
+    k.textContent = "Stopp følging"; k.setAttribute("aria-pressed", "true");
+    document.getElementById("pos-hjelp").textContent = "Venter på posisjon …";
+    gpsId = navigator.geolocation.watchPosition(gpsNy, gpsFeil, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+  });
+}
+
+function velgNode(i) {
+  valgt = i;
+  const a = document.getElementById("vis-antall");
+  a.disabled = i >= 0;
+  if (i >= 0 && visning === "antall") settVisning("signal");
+  else tegn();
+}
+function settVisning(v) {
+  visning = v;
+  document.getElementById("vis-signal").setAttribute("aria-pressed", String(v === "signal"));
+  document.getElementById("vis-antall").setAttribute("aria-pressed", String(v === "antall"));
+  tegn();
+}
+document.getElementById("vis-signal").addEventListener("click", () => settVisning("signal"));
+document.getElementById("vis-antall").addEventListener("click", () => settVisning("antall"));
+document.getElementById("node").addEventListener("change", e => velgNode(Number(e.target.value)));
+document.getElementById("usikker").addEventListener("change", e => { visUsikker = e.target.checked; tegn(); });
+kart.on("click", e => les(e.latlng.lat, e.latlng.lng));
+
+DATA.noder.forEach((n, i) => {
+  n.km_fra = (lat, lon) => avstand(lat, lon, n.lat, n.lon) / 1000;
+  const o = document.createElement("option");
+  o.value = String(i);
+  o.textContent = `${n.navn} (${tall(n.km_fra(UT.lat, UT.lon), 1)} km)`;
+  document.getElementById("node").appendChild(o);
+});
+
+function lastLag(fil) {
+  return new Promise((ok, feil) => {
+    const b = new Image();
+    b.onload = () => {
+      const c = document.createElement("canvas"); c.width = nx; c.height = ny;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(b, 0, 0);
+      const d = ctx.getImageData(0, 0, nx, ny).data, kanaler = [0, 1, 2].map(() => new Uint8Array(nx * ny));
+      for (let p = 0, o = 0; p < nx * ny; p++, o += 4) { kanaler[0][p] = d[o]; kanaler[1][p] = d[o + 1]; kanaler[2][p] = d[o + 2]; }
+      ok(kanaler);
+    };
+    b.onerror = () => feil(new Error(fil));
+    b.src = fil;
+  });
+}
+
+Promise.all(DATA.lagfiler.map(lastLag)).then(deler => {
+  lag = deler.flat().slice(0, DATA.noder.length);
+  godAntall = new Uint8Array(nx * ny);
+  lag.forEach(l => { for (let p = 0; p < nx * ny; p++) { const b = l[p]; if (b >> 6 && (b & 63) - 128 >= GOD) godAntall[p]++; } });
+  tegn();
+  try { const m = JSON.parse(localStorage.getItem("dekning-meg") || "null"); if (m && grenser.contains([m.lat, m.lon])) settMeg(m.lat, m.lon, false); } catch (e) {}
+  tegnSteder();
+  if (meg) les(meg.lat, meg.lon, "Din posisjon"); else les(UT.lat, UT.lon, UT.navn);
+}).catch(() => {
+  document.getElementById("punkt").innerHTML = "<h2>Valgt punkt</h2><p>Dekningsdataene kunne ikke lastes. Last siden på nytt.</p>";
+});
+
+function tegnSteder() {
+  document.getElementById("steder").innerHTML = "";
+  DATA.steder.forEach(s => {
+    const g = gode(noderI(rute(s.lat, s.lon)));
+    const k = document.createElement("button");
+    k.type = "button"; k.className = "sted";
+    k.innerHTML = `<div><b>${s.navn}</b><br><span>${fraStart(s.lat, s.lon)}</span></div><span>${g.length} ${g.length === 1 ? "node" : "noder"}${g.length ? "<br>" + tall(g[0].rx) + " dBm" : ""}</span>`;
+    k.addEventListener("click", () => { kart.flyTo([s.lat, s.lon], 15, { duration: 0.6 }); les(s.lat, s.lon, s.navn); });
+    document.getElementById("steder").appendChild(k);
+  });
+}
+
+tegnForklaring();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", tegn);
+new MutationObserver(tegn).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
+</body>
+</html>
